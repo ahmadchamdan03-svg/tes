@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — Sistem Siswa</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <h1>🔐 Login</h1>
+    <p class="login-sub">Sistem Siswa, Kamar & Alamat</p>
+
+    <!-- FORM LOGIN -->
+    <form id="form-login" class="login-form">
+      <label>
+        Email
+        <input type="email" id="email" placeholder="email@example.com" required autocomplete="email" />
+      </label>
+      <label>
+        Password
+        <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password" />
+      </label>
+      <button type="submit" id="btn-login">Masuk</button>
+    </form>
+
+    <!-- FORM REGISTER (toggle) -->
+    <form id="form-register" class="login-form" style="display:none;">
+      <label>
+        Email
+        <input type="email" id="reg-email" placeholder="email@example.com" required autocomplete="email" />
+      </label>
+      <label>
+        Password
+        <input type="password" id="reg-password" placeholder="Min. 6 karakter" required minlength="6" autocomplete="new-password" />
+      </label>
+      <label>
+        Konfirmasi Password
+        <input type="password" id="reg-password2" placeholder="Ulangi password" required minlength="6" autocomplete="new-password" />
+      </label>
+      <button type="submit" id="btn-register">Daftar</button>
+    </form>
+
+    <div class="login-switch">
+      <span id="switch-text">Belum punya akun?</span>
+      <a href="#" id="switch-link">Daftar</a>
+    </div>
+
+    <div id="login-message" class="login-message"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="login.js"></script>
+</body>
+</html>
