@@ -414,6 +414,28 @@ async function hapusSiswa(nomor) {
   await loadKamar();
   await loadAlamat();
 }
+// ============================================
+// STORAGE: UPLOAD & DELETE FOTO
+// ============================================
+async function uploadFoto(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const path = `siswa/${filename}`;
+
+  const { error } = await db.storage
+    .from('foto-siswa')
+    .upload(path, file, { cacheControl: '3600', upsert: false });
+
+  if (error) throw error;
+
+  const { data } = db.storage.from('foto-siswa').getPublicUrl(path);
+  return { path, url: data.publicUrl };
+}
+
+async function hapusFotoStorage(path) {
+  if (!path) return;
+  await db.storage.from('foto-siswa').remove([path]);
+}
 
 // ============================================
 // FILTER EVENT
