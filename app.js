@@ -1,5 +1,5 @@
 // ============================================
-// KONFIGURASI SUPABASE — ganti sesuai project kamu
+// KONFIGURASI SUPABASE
 // ============================================
 const SUPABASE_URL = 'https://ibvttbwpnwjkwqmtrpzv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlidnR0Yndwbndqa3dxbXRycHp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzODYxMDYsImV4cCI6MjEwNDk2MjEwNn0.daZoQYogXHlUn4nDf3V3CLu3udXhPdsLq6kAcTbG5Ag';
@@ -20,9 +20,9 @@ const state = {
 };
 
 // State foto
-let fotoFile     = null;   // File baru yang dipilih user
-let fotoLamaUrl  = null;   // URL foto lama (saat edit)
-let fotoLamaPath = null;   // Path storage foto lama
+let fotoFile     = null;
+let fotoLamaUrl  = null;
+let fotoLamaPath = null;
 
 // ============================================
 // UTIL
@@ -311,7 +311,6 @@ document.getElementById('btn-hapus-foto').addEventListener('click', () => {
   document.getElementById('foto-placeholder').style.display = 'block';
   document.getElementById('btn-hapus-foto').style.display = 'none';
 
-  // Kalau sedang edit, tandai foto lama untuk dihapus saat submit
   if (state.editingSiswaId) {
     fotoLamaUrl = null;
   }
@@ -455,7 +454,7 @@ async function hapusAlamat(id) {
 }
 
 // ============================================
-// CRUD: SISWA
+// CRUD: SISWA (FULL — sudah diperbaiki)
 // ============================================
 document.getElementById('form-siswa').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -495,4 +494,102 @@ document.getElementById('form-siswa').addEventListener('submit', async (e) => {
       foto_path,
     };
 
-    let
+    let error;
+    if (state.editingSiswaId) {
+      ({ error } = await db.from('siswa').update(payload).eq('nomor', state.editingSiswaId));
+    } else {
+      ({ error } = await db.from('siswa').insert(payload));
+    }
+
+    if (error) throw error;
+
+    toast(state.editingSiswaId ? 'Siswa diperbarui' : 'Siswa ditambahkan');
+    resetFormSiswa();
+    await loadSiswa();
+    await loadKamar();
+    await loadAlamat();
+  } catch (err) {
+    console.error(err);
+    toast('Gagal: ' + err.message, true);
+  } finally {
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = originalText;
+  }
+});
+
+function editSiswa(nomor) {
+  const s = state.siswaList.find(x => x.nomor === nomor);
+  if (!s) return;
+
+  document.getElementById('nama').value      = s.nama;
+  document.getElementById('kelas').value     = s.kelas;
+  document.getElementById('kamar_id').value  = s.kamar_id  || '';
+  document.getElementById('alamat_id').value = s.alamat_id || '';
+
+  // === FOTO ===
+  fotoLamaUrl  = s.foto_url  || null;
+  fotoLamaPath = s.foto_path || null;
+  fotoFile     = null;
+  setFotoPreviewFromUrl(fotoLamaUrl);
+
+  state.editingSiswaId = nomor;
+  document.getElementById('title-form-siswa').textContent = '✏️ Edit Siswa';
+  document.getElementById('btn-submit-siswa').textContent = 'Update';
+  document.getElementById('btn-cancel-siswa').style.display = 'block';
+  document.getElementById('nama').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetFormSiswa() {
+  document.getElementById('form-siswa').reset();
+  resetFotoPreview();
+  state.editingSiswaId = null;
+  document.getElementById('title-form-siswa').textContent = '➕ Tambah Siswa';
+  document.getElementById('btn-submit-siswa').textContent = 'Simpan';
+  document.getElementById('btn-cancel-siswa').style.display = 'none';
+}
+
+document.getElementById('btn-cancel-siswa').addEventListener('click', resetFormSiswa);
+
+async function hapusSiswa(nomor) {
+  if (!confirm('Yakin hapus siswa ini?')) return;
+
+  const s = state.siswaList.find(x => x.nomor === nomor);
+  if (s?.foto_path) {
+    await hapusFotoStorage(s.foto_path);
+  }
+
+  const { error } = await db.from('siswa').delete().eq('nomor', nomor);
+  if (error) { toast('Gagal hapus: ' + error.message, true); return; }
+
+  toast('Siswa dihapus');
+  await loadSiswa();
+  await loadKamar();
+  await loadAlamat();
+}
+
+// ============================================
+// FILTER EVENT
+// ============================================
+document.getElementById('search').addEventListener('input', renderSiswa);
+document.getElementById('filter-kamar').addEventListener('change', renderSiswa);
+document.getElementById('filter-alamat').addEventListener('change', renderSiswa);
+
+// ============================================
+// EXPOSE FUNCTION KE WINDOW (untuk onclick)
+// ============================================
+window.editKamar   = editKamar;
+window.hapusKamar  = hapusKamar;
+window.editAlamat  = editAlamat;
+window.hapusAlamat = hapusAlamat;
+window.editSiswa   = editSiswa;
+window.hapusSiswa  = hapusSiswa;
+
+// ============================================
+// INIT
+// ============================================
+(async function init() {
+  await loadKamar();
+  await loadAlamat();
+  await loadSiswa();
+})();
