@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistem Siswa & Kamar</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🏠 Sistem Siswa, Kamar & Alamat</h1>
+
+    <!-- ============ TAB NAVIGASI ============ -->
+    <div class="tabs">
+      <button class="tab active" data-tab="siswa">👨‍🎓 Siswa</button>
+      <button class="tab" data-tab="kamar">🛏️ Kamar</button>
+      <button class="tab" data-tab="alamat">📍 Alamat</button>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- TAB: SISWA                                            -->
+    <!-- ===================================================== -->
+    <div class="tab-content active" id="tab-siswa">
+      <section class="card">
+        <h2 id="title-form-siswa">➕ Tambah Siswa</h2>
+        <form id="form-siswa" class="form form-siswa">
+          <input type="text" id="nama" placeholder="Nama Siswa" required />
+          <input type="text" id="kelas" placeholder="Kelas (ex: X-IPA-1)" required />
+          <select id="kamar_id">
+            <option value="">-- Pilih Kamar --</option>
+          </select>
+          <select id="alamat_id">
+            <option value="">-- Pilih Alamat --</option>
+          </select>
+          <div class="form-actions">
+            <button type="submit" id="btn-submit-siswa">Simpan</button>
+            <button type="button" class="btn-cancel" id="btn-cancel-siswa" style="display:none;">Batal</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>🔍 Filter</h2>
+        <div class="filter">
+          <input type="text" id="search" placeholder="Cari nama siswa..." />
+          <select id="filter-kamar">
+            <option value="">Semua Kamar</option>
+          </select>
+          <select id="filter-alamat">
+            <option value="">Semua Alamat</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>📋 Daftar Siswa</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Nama</th>
+                <th>Kelas</th>
+                <th>Kamar</th>
+                <th>Alamat</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-siswa">
+              <tr><td colspan="6" class="empty">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- TAB: KAMAR                                            -->
+    <!-- ===================================================== -->
+    <div class="tab-content" id="tab-kamar">
+      <section class="card">
+        <h2 id="title-form-kamar">➕ Tambah Kamar</h2>
+        <form id="form-kamar" class="form">
+          <input type="text" id="nomor_kamar" placeholder="Nomor Kamar (ex: A01)" required />
+          <input type="text" id="nama_kamar" placeholder="Nama Kamar (ex: Melati)" required />
+          <input type="number" id="kapasitas" placeholder="Kapasitas" value="4" min="1" required />
+          <div class="form-actions">
+            <button type="submit" id="btn-submit-kamar">Simpan</button>
+            <button type="button" class="btn-cancel" id="btn-cancel-kamar" style="display:none;">Batal</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>🛏️ Daftar Kamar</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Nomor</th>
+                <th>Nama Kamar</th>
+                <th>Kapasitas</th>
+                <th>Terisi</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-kamar">
+              <tr><td colspan="6" class="empty">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- TAB: ALAMAT                                           -->
+    <!-- ===================================================== -->
+    <div class="tab-content" id="tab-alamat">
+      <section class="card">
+        <h2 id="title-form-alamat">➕ Tambah Alamat</h2>
+        <form id="form-alamat" class="form">
+          <input type="text" id="nama_alamat" placeholder="Nama / Detail Alamat" required />
+          <div class="form-actions">
+            <button type="submit" id="btn-submit-alamat">Simpan</button>
+            <button type="button" class="btn-cancel" id="btn-cancel-alamat" style="display:none;">Batal</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>📍 Daftar Alamat</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>ID</th>
+                <th>Nama Alamat</th>
+                <th>Dibuat</th>
+                <th>Jumlah Siswa</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-alamat">
+              <tr><td colspan="6" class="empty">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
