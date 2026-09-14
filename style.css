@@ -44,6 +44,7 @@ h1 {
   font-size: 0.95rem;
   transition: 0.2s;
   backdrop-filter: blur(6px);
+  width: auto;
 }
 
 .tab:hover {
@@ -132,6 +133,11 @@ button:hover {
   background: #5568d3;
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-cancel {
   background: #9ca3af;
 }
@@ -161,6 +167,47 @@ button:hover {
 
 .btn-edit:hover {
   background: #d97706;
+}
+
+/* ============ FOTO FIELD ============ */
+.foto-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.foto-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 110px;
+  border: 2px dashed #c7d2fe;
+  border-radius: 10px;
+  background: #f8f9ff;
+  cursor: pointer;
+  transition: 0.2s;
+  padding: 10px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.foto-label:hover {
+  background: #eef2ff;
+  border-color: #667eea;
+}
+
+.foto-preview {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* ============ FILTER ============ */
@@ -209,6 +256,32 @@ tr:hover td {
   padding: 20px;
 }
 
+/* ============ FOTO DI TABEL ============ */
+.foto-mini {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  background: #eee;
+  border: 2px solid #fff;
+}
+
+.foto-placeholder-mini {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #9ca3af;
+  border: 2px solid #fff;
+}
+
+/* ============ BADGE ============ */
 .badge {
   display: inline-block;
   background: #e0e7ff;
@@ -249,69 +322,4 @@ tr:hover td {
 
 .toast.error {
   background: #ef4444;
-}
-/* ===== FOTO FIELD ===== */
-.foto-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-}
-
-.foto-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  min-height: 110px;
-  border: 2px dashed #c7d2fe;
-  border-radius: 10px;
-  background: #f8f9ff;
-  cursor: pointer;
-  transition: 0.2s;
-  padding: 10px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #667eea;
-  font-weight: 600;
-}
-
-.foto-label:hover {
-  background: #eef2ff;
-  border-color: #667eea;
-}
-
-.foto-preview {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* ===== FOTO DI TABEL ===== */
-.foto-mini {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  background: #eee;
-  border: 2px solid #fff;
-}
-
-.foto-placeholder-mini {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  color: #9ca3af;
-  border: 2px solid #fff;
 }
