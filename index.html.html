@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sistem Siswa & Kamar</title>
+  <title>Sistem Siswa, Kamar & Alamat</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -32,6 +32,19 @@
           <select id="alamat_id">
             <option value="">-- Pilih Alamat --</option>
           </select>
+
+          <!-- === FOTO === -->
+          <div class="foto-field">
+            <label for="foto" class="foto-label">
+              <img id="foto-preview" src="" alt="" class="foto-preview" style="display:none;" />
+              <span id="foto-placeholder">📷 Pilih Foto</span>
+              <input type="file" id="foto" accept="image/*" hidden />
+            </label>
+            <button type="button" class="btn-cancel" id="btn-hapus-foto" style="display:none;">
+              Hapus Foto
+            </button>
+          </div>
+
           <div class="form-actions">
             <button type="submit" id="btn-submit-siswa">Simpan</button>
             <button type="button" class="btn-cancel" id="btn-cancel-siswa" style="display:none;">Batal</button>
@@ -59,6 +72,7 @@
             <thead>
               <tr>
                 <th>No</th>
+                <th>Foto</th>
                 <th>Nama</th>
                 <th>Kelas</th>
                 <th>Kamar</th>
@@ -67,7 +81,7 @@
               </tr>
             </thead>
             <tbody id="tbody-siswa">
-              <tr><td colspan="6" class="empty">Loading...</td></tr>
+              <tr><td colspan="7" class="empty">Loading...</td></tr>
             </tbody>
           </table>
         </div>
