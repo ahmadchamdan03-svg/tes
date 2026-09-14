@@ -1,8 +1,8 @@
 // ============================================
 // KONFIGURASI SUPABASE — ganti sesuai project kamu
 // ============================================
-const SUPABASE_URL = 'https://ibvttbwpnwjkwqmtrpzv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlidnR0Yndwbndqa3dxbXRycHp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzODYxMDYsImV4cCI6MjEwNDk2MjEwNn0.daZoQYogXHlUn4nDf3V3CLu3udXhPdsLq6kAcTbG5Ag';
+const SUPABASE_URL = 'https://xxxxx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOi...';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -18,6 +18,11 @@ const state = {
   editingKamarId: null,
   editingAlamatId: null,
 };
+
+// State foto
+let fotoFile     = null;   // File baru yang dipilih user
+let fotoLamaUrl  = null;   // URL foto lama (saat edit)
+let fotoLamaPath = null;   // Path storage foto lama
 
 // ============================================
 // UTIL
@@ -66,6 +71,33 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // ============================================
+// STORAGE: UPLOAD & DELETE FOTO
+// ============================================
+async function uploadFoto(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const path = `siswa/${filename}`;
+
+  const { error } = await db.storage
+    .from('foto-siswa')
+    .upload(path, file, { cacheControl: '3600', upsert: false });
+
+  if (error) throw error;
+
+  const { data } = db.storage.from('foto-siswa').getPublicUrl(path);
+  return { path, url: data.publicUrl };
+}
+
+async function hapusFotoStorage(path) {
+  if (!path) return;
+  try {
+    await db.storage.from('foto-siswa').remove([path]);
+  } catch (err) {
+    console.warn('Gagal hapus foto:', err);
+  }
+}
+
+// ============================================
 // LOAD DATA
 // ============================================
 async function loadKamar() {
@@ -101,6 +133,8 @@ async function loadSiswa() {
       kelas,
       kamar_id,
       alamat_id,
+      foto_url,
+      foto_path,
       kamar:kamar_id ( nomor_kamar, nama_kamar ),
       alamat:alamat_id ( nama_alamat )
     `)
@@ -171,26 +205,32 @@ function renderAlamat() {
 // ============================================
 function renderSiswa() {
   const tbody = document.getElementById('tbody-siswa');
-  const keyword = document.getElementById('search').value.toLowerCase().trim();
-  const filterKamar = document.getElementById('filter-kamar').value;
+  const keyword      = document.getElementById('search').value.toLowerCase().trim();
+  const filterKamar  = document.getElementById('filter-kamar').value;
   const filterAlamat = document.getElementById('filter-alamat').value;
 
   let list = state.siswaList;
-  if (keyword) list = list.filter(s => s.nama.toLowerCase().includes(keyword));
-  if (filterKamar) list = list.filter(s => String(s.kamar_id) === filterKamar);
+  if (keyword)      list = list.filter(s => s.nama.toLowerCase().includes(keyword));
+  if (filterKamar)  list = list.filter(s => String(s.kamar_id)  === filterKamar);
   if (filterAlamat) list = list.filter(s => String(s.alamat_id) === filterAlamat);
 
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty">Tidak ada data siswa</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">Tidak ada data siswa</td></tr>`;
     return;
   }
 
   tbody.innerHTML = list.map((s, i) => {
-    const kamar = s.kamar ? `${s.kamar.nomor_kamar} - ${s.kamar.nama_kamar ?? ''}` : '-';
+    const kamar  = s.kamar  ? `${s.kamar.nomor_kamar} - ${s.kamar.nama_kamar ?? ''}` : '-';
     const alamat = s.alamat?.nama_alamat || '-';
+
+    const foto = s.foto_url
+      ? `<img src="${escapeHtml(s.foto_url)}" alt="Foto" class="foto-mini" />`
+      : `<div class="foto-placeholder-mini">👤</div>`;
+
     return `
       <tr>
         <td>${i + 1}</td>
+        <td>${foto}</td>
         <td>${escapeHtml(s.nama)}</td>
         <td>${escapeHtml(s.kelas)}</td>
         <td>${escapeHtml(kamar)}</td>
@@ -212,13 +252,13 @@ function renderKamarOptions() {
     .map(k => `<option value="${k.id}">${escapeHtml(k.nomor_kamar)} - ${escapeHtml(k.nama_kamar || '')}</option>`)
     .join('');
 
-  const selSiswa = document.getElementById('kamar_id');
+  const selSiswa  = document.getElementById('kamar_id');
   const selFilter = document.getElementById('filter-kamar');
 
   const v1 = selSiswa.value, v2 = selFilter.value;
-  selSiswa.innerHTML = `<option value="">-- Pilih Kamar --</option>` + options;
+  selSiswa.innerHTML  = `<option value="">-- Pilih Kamar --</option>` + options;
   selFilter.innerHTML = `<option value="">Semua Kamar</option>` + options;
-  selSiswa.value = v1;
+  selSiswa.value  = v1;
   selFilter.value = v2;
 }
 
@@ -227,14 +267,78 @@ function renderAlamatOptions() {
     .map(a => `<option value="${a.id}">${escapeHtml(a.nama_alamat || '-')}</option>`)
     .join('');
 
-  const selSiswa = document.getElementById('alamat_id');
+  const selSiswa  = document.getElementById('alamat_id');
   const selFilter = document.getElementById('filter-alamat');
 
   const v1 = selSiswa.value, v2 = selFilter.value;
-  selSiswa.innerHTML = `<option value="">-- Pilih Alamat --</option>` + options;
+  selSiswa.innerHTML  = `<option value="">-- Pilih Alamat --</option>` + options;
   selFilter.innerHTML = `<option value="">Semua Alamat</option>` + options;
-  selSiswa.value = v1;
+  selSiswa.value  = v1;
   selFilter.value = v2;
+}
+
+// ============================================
+// FOTO PREVIEW
+// ============================================
+document.getElementById('foto').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    toast('Ukuran foto maksimal 2 MB', true);
+    e.target.value = '';
+    return;
+  }
+
+  fotoFile = file;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = document.getElementById('foto-preview');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    document.getElementById('foto-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('btn-hapus-foto').style.display = 'block';
+});
+
+document.getElementById('btn-hapus-foto').addEventListener('click', () => {
+  fotoFile = null;
+  document.getElementById('foto').value = '';
+  const img = document.getElementById('foto-preview');
+  img.src = '';
+  img.style.display = 'none';
+  document.getElementById('foto-placeholder').style.display = 'block';
+  document.getElementById('btn-hapus-foto').style.display = 'none';
+
+  // Kalau sedang edit, tandai foto lama untuk dihapus saat submit
+  if (state.editingSiswaId) {
+    fotoLamaUrl = null;
+  }
+});
+
+function resetFotoPreview() {
+  fotoFile     = null;
+  fotoLamaUrl  = null;
+  fotoLamaPath = null;
+  document.getElementById('foto').value = '';
+  const img = document.getElementById('foto-preview');
+  img.src = '';
+  img.style.display = 'none';
+  document.getElementById('foto-placeholder').style.display = 'block';
+  document.getElementById('btn-hapus-foto').style.display = 'none';
+}
+
+function setFotoPreviewFromUrl(url) {
+  const img = document.getElementById('foto-preview');
+  if (url) {
+    img.src = url;
+    img.style.display = 'block';
+    document.getElementById('foto-placeholder').style.display = 'none';
+    document.getElementById('btn-hapus-foto').style.display = 'block';
+  } else {
+    resetFotoPreview();
+  }
 }
 
 // ============================================
@@ -244,8 +348,8 @@ document.getElementById('form-kamar').addEventListener('submit', async (e) => {
   e.preventDefault();
   const payload = {
     nomor_kamar: document.getElementById('nomor_kamar').value.trim(),
-    nama_kamar: document.getElementById('nama_kamar').value.trim(),
-    kapasitas: parseInt(document.getElementById('kapasitas').value, 10),
+    nama_kamar:  document.getElementById('nama_kamar').value.trim(),
+    kapasitas:   parseInt(document.getElementById('kapasitas').value, 10),
   };
 
   let error;
@@ -266,8 +370,8 @@ function editKamar(id) {
   const k = state.kamarList.find(x => x.id === id);
   if (!k) return;
   document.getElementById('nomor_kamar').value = k.nomor_kamar;
-  document.getElementById('nama_kamar').value = k.nama_kamar || '';
-  document.getElementById('kapasitas').value = k.kapasitas;
+  document.getElementById('nama_kamar').value  = k.nama_kamar || '';
+  document.getElementById('kapasitas').value   = k.kapasitas;
   state.editingKamarId = id;
   document.getElementById('title-form-kamar').textContent = '✏️ Edit Kamar';
   document.getElementById('btn-submit-kamar').textContent = 'Update';
@@ -355,110 +459,40 @@ async function hapusAlamat(id) {
 // ============================================
 document.getElementById('form-siswa').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const kamarVal = document.getElementById('kamar_id').value;
+
+  const kamarVal  = document.getElementById('kamar_id').value;
   const alamatVal = document.getElementById('alamat_id').value;
 
-  const payload = {
-    nama: document.getElementById('nama').value.trim(),
-    kelas: document.getElementById('kelas').value.trim(),
-    kamar_id: kamarVal ? parseInt(kamarVal, 10) : null,
-    alamat_id: alamatVal ? parseInt(alamatVal, 10) : null,
-  };
+  const btnSubmit = document.getElementById('btn-submit-siswa');
+  const originalText = btnSubmit.textContent;
+  btnSubmit.disabled = true;
+  btnSubmit.textContent = 'Menyimpan...';
 
-  let error;
-  if (state.editingSiswaId) {
-    ({ error } = await db.from('siswa').update(payload).eq('nomor', state.editingSiswaId));
-  } else {
-    ({ error } = await db.from('siswa').insert(payload));
-  }
+  try {
+    let foto_url  = fotoLamaUrl;
+    let foto_path = fotoLamaPath;
 
-  if (error) { toast('Gagal: ' + error.message, true); return; }
-  toast(state.editingSiswaId ? 'Siswa diperbarui' : 'Siswa ditambahkan');
-  resetFormSiswa();
-  await loadSiswa();
-  await loadKamar();
-  await loadAlamat();
-});
+    // 1. Upload foto baru (kalau ada)
+    if (fotoFile) {
+      const uploaded = await uploadFoto(fotoFile);
+      if (fotoLamaPath) await hapusFotoStorage(fotoLamaPath);
+      foto_url  = uploaded.url;
+      foto_path = uploaded.path;
+    }
+    // 2. User hapus foto tanpa pilih baru (saat edit)
+    else if (state.editingSiswaId && !fotoLamaUrl) {
+      if (fotoLamaPath) await hapusFotoStorage(fotoLamaPath);
+      foto_url  = null;
+      foto_path = null;
+    }
 
-function editSiswa(nomor) {
-  const s = state.siswaList.find(x => x.nomor === nomor);
-  if (!s) return;
-  document.getElementById('nama').value = s.nama;
-  document.getElementById('kelas').value = s.kelas;
-  document.getElementById('kamar_id').value = s.kamar_id || '';
-  document.getElementById('alamat_id').value = s.alamat_id || '';
-  state.editingSiswaId = nomor;
-  document.getElementById('title-form-siswa').textContent = '✏️ Edit Siswa';
-  document.getElementById('btn-submit-siswa').textContent = 'Update';
-  document.getElementById('btn-cancel-siswa').style.display = 'block';
-  document.getElementById('nama').focus();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+    const payload = {
+      nama:      document.getElementById('nama').value.trim(),
+      kelas:     document.getElementById('kelas').value.trim(),
+      kamar_id:  kamarVal  ? parseInt(kamarVal, 10)  : null,
+      alamat_id: alamatVal ? parseInt(alamatVal, 10) : null,
+      foto_url,
+      foto_path,
+    };
 
-function resetFormSiswa() {
-  document.getElementById('form-siswa').reset();
-  state.editingSiswaId = null;
-  document.getElementById('title-form-siswa').textContent = '➕ Tambah Siswa';
-  document.getElementById('btn-submit-siswa').textContent = 'Simpan';
-  document.getElementById('btn-cancel-siswa').style.display = 'none';
-}
-
-document.getElementById('btn-cancel-siswa').addEventListener('click', resetFormSiswa);
-
-async function hapusSiswa(nomor) {
-  if (!confirm('Yakin hapus siswa ini?')) return;
-  const { error } = await db.from('siswa').delete().eq('nomor', nomor);
-  if (error) { toast('Gagal hapus: ' + error.message, true); return; }
-  toast('Siswa dihapus');
-  await loadSiswa();
-  await loadKamar();
-  await loadAlamat();
-}
-// ============================================
-// STORAGE: UPLOAD & DELETE FOTO
-// ============================================
-async function uploadFoto(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const path = `siswa/${filename}`;
-
-  const { error } = await db.storage
-    .from('foto-siswa')
-    .upload(path, file, { cacheControl: '3600', upsert: false });
-
-  if (error) throw error;
-
-  const { data } = db.storage.from('foto-siswa').getPublicUrl(path);
-  return { path, url: data.publicUrl };
-}
-
-async function hapusFotoStorage(path) {
-  if (!path) return;
-  await db.storage.from('foto-siswa').remove([path]);
-}
-
-// ============================================
-// FILTER EVENT
-// ============================================
-document.getElementById('search').addEventListener('input', renderSiswa);
-document.getElementById('filter-kamar').addEventListener('change', renderSiswa);
-document.getElementById('filter-alamat').addEventListener('change', renderSiswa);
-
-// ============================================
-// EXPOSE FUNCTION KE WINDOW (untuk onclick)
-// ============================================
-window.editKamar = editKamar;
-window.hapusKamar = hapusKamar;
-window.editAlamat = editAlamat;
-window.hapusAlamat = hapusAlamat;
-window.editSiswa = editSiswa;
-window.hapusSiswa = hapusSiswa;
-
-// ============================================
-// INIT
-// ============================================
-(async function init() {
-  await loadKamar();
-  await loadAlamat();
-  await loadSiswa();
-})();
+    let
